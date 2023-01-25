@@ -17,14 +17,37 @@ module.exports = {
 
         client.distube
             .on('playSong', (queue, song) => {
+                console.log(song.likes);
                 embed
                     .setColor('DarkBlue')
-                    .setTitle(`${client.emotes.play}`)
-                    .setDescription(
-                        `${client.emotes.play} | Playing \`${song.name}\` - \`${
-                            song.formattedDuration
-                        }\`\nRequested by: ${song.user}\n${status(queue)}`
-                    );
+                    .setDescription(`${client.emotes.play} | ${song.name}`)
+                    .addFields(
+                        {
+                            name: '**View**',
+                            value: `${song.views}`,
+                            inline: true,
+                        },
+                        {
+                            name: '**Like:**',
+                            value: `${song.likes}`,
+                            inline: true,
+                        },
+                        {
+                            name: '**Duration:**',
+                            value: `${song.formattedDuration}` || 'N:N',
+                            inline: true,
+                        }
+                    )
+                    .addFields({
+                        name: '**Status**',
+                        value: status(queue),
+                    })
+                    .setImage(song.thumbnail)
+                    .setFooter({
+                        text: `Requested by ${song.user?.username}`,
+                        iconURL: song.user?.displayAvatarURL(),
+                    })
+                    .setTimestamp();
                 return queue.textChannel.send({
                     embeds: [embed],
                 });
@@ -40,6 +63,7 @@ module.exports = {
                 });
             })
             .on('addList', (queue, playlist) => {
+                console.log(playlist);
                 embed
                     .setTitle(`${client.emotes.success}`)
                     .setDescription(
@@ -70,7 +94,33 @@ module.exports = {
                     `${client.emotes.error} | No result found for \`${query}\`!`
                 )
             )
-            .on('finish', (queue) => queue.textChannel.send('Finished!'));
+            .on('finish', (queue) => queue.textChannel.send('Finished!'))
+            .on('searchResult', (message, result) => {
+                let i = 0;
+                message.channel.send(
+                    `**Choose an option from below**\n${result
+                        .map(
+                            (song) =>
+                                `**${++i}**. ${song.name} - \`${
+                                    song.formattedDuration
+                                }\``
+                        )
+                        .join(
+                            '\n'
+                        )}\n*Enter anything else or wait 60 seconds to cancel*`
+                );
+            })
+            .on('searchCancel', (message) =>
+                message.channel.send(
+                    `${client.emotes.error} | Searching canceled`
+                )
+            )
+            .on('searchInvalidAnswer', (message) =>
+                message.channel.send(
+                    `${client.emotes.error} | Invalid answer! You have to enter the number in the range of the results`
+                )
+            )
+            .on('searchDone', () => {});
         // DisTubeOptions.searchSongs = true
     },
 };

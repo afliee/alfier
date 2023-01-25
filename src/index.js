@@ -9,6 +9,8 @@ const TOKEN = process.env.DJS_TOKEN;
 
 const { DisTube } = require('distube');
 const { SpotifyPlugin } = require('@distube/spotify');
+const { SoundCloudPlugin } = require('@distube/soundcloud');
+const { YtDlpPlugin } = require('@distube/yt-dlp');
 
 const client = new Client({
     intents: [
@@ -29,10 +31,20 @@ client.cooldown = new Collection();
 client.emotes = config.emoji;
 
 client.distube = new DisTube(client, {
+    searchSongs: 5,
+    leaveOnEmpty: true,
+    emptyCooldown: 30,
+    leaveOnFinish: false,
     emitNewSongOnly: true,
-    leaveOnFinish: true,
+    emitAddListWhenCreatingQueue: false,
     emitAddSongWhenCreatingQueue: false,
-    plugins: [new SpotifyPlugin()],
+    plugins: [
+        new SpotifyPlugin({
+            emitEventsAfterFetching: true,
+        }),
+        new SoundCloudPlugin(),
+        new YtDlpPlugin(),
+    ],
 });
 
 const functionPath = path.join(__dirname, 'functions');
