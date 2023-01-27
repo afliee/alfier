@@ -2,6 +2,7 @@ const {
     SlashCommandBuilder,
     EmbedBuilder,
     VoiceChannel,
+    User,
 } = require('discord.js');
 
 module.exports = {
@@ -22,11 +23,23 @@ module.exports = {
             });
         }
 
-        if (!member.voice.channelId === guild.members.me.voice.channelId) {
+        // if (!member.voice.channelId === guild.members.me.voice.channelId) {
+        //     embed
+        //         .setColor('Red')
+        //         .setDescription(
+        //             `You can't use because I already active in <#${guild.members.me.voice.channelId}>`
+        //         );
+        //     return interaction.reply({
+        //         embeds: [embed],
+        //     });
+        // }
+        const memberChannelId = member.voice.channelId;
+        const botChannelId = guild.members.me.voice.channelId;
+        if (!botChannelId || memberChannelId !== botChannelId) {
             embed
                 .setColor('Red')
                 .setDescription(
-                    `You can't use because I already active in <#${guild.members.me.voice.channelId}>`
+                    'You must be in same voice channel with bot to use this command'
                 );
             return interaction.reply({
                 embeds: [embed],
@@ -41,7 +54,7 @@ module.exports = {
                 ephemeral: true,
             });
         }
-        
+
         try {
             await queue.pause(voiceChannel);
             embed

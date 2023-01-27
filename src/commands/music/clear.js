@@ -1,13 +1,20 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const {
+    SlashCommandBuilder,
+    EmbedBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ActionRow,
+    ActionRowBuilder,
+} = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('stop')
-        .setDescription('Stop the connection'),
+        .setName('music_clear')
+        .setDescription('Clear current queue'),
     async execute(interaction) {
-        const { member, guild, client } = interaction;
-        const embed = new EmbedBuilder();
+        const { client, member, guild, channel, user } = interaction;
         const voiceChannel = member.voice.channel;
+        const embed = new EmbedBuilder();
 
         if (!voiceChannel) {
             embed
@@ -22,7 +29,7 @@ module.exports = {
         const botChannelId = guild.members.me.voice.channelId;
         if (!botChannelId || memberChannelId !== botChannelId) {
             embed
-                .setColor('Red')
+                .setColor('Red')    
                 .setDescription(
                     'You must be in same voice channel with bot to use this command'
                 );
@@ -31,8 +38,23 @@ module.exports = {
             });
         }
 
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('confirm_btn')
+                .setStyle(ButtonStyle.Primary)
+                .setLabel('Clear Current State??')
+        );
+
+        await interaction.reply({
+            components: [row],
+        });
+
+        const filter = (i) =>
+            i.customId === 'confirm_btn' && i.user.id === user.id;
+
         try {
-            const queue = await client.distube.getQueue(voiceChannel);
+            const queue = client.distube.getQueue(voiceChannel);
+
             if (!queue) {
                 embed
                     .setColor('Red')
@@ -43,19 +65,19 @@ module.exports = {
                 });
             }
 
-            await queue.stop();
-            embed
-                .setColor('Green')
-                .setDescription('⏹️ | The song has been stopped');
-            return interaction.reply({
-                embeds: [embed],
+            const collector = channel.createMessageComponentCollector({
+                filter,
+                time: 1000 * 15,
+            });
+
+            collector.on('collect', async (i) => {
+                queue.songs = [];
+                await i.update({ content: `A button was clicked!` });
             });
         } catch (e) {
             console.log(e);
-            embed.setDescription(
-                `${client.emotes.error} | Something went wrong`
-            );
             await interaction.reply({
+                content: `Position out of range`,
                 embeds: [embed],
                 ephemeral: true,
             });

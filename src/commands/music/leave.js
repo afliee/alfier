@@ -5,7 +5,7 @@ module.exports = {
         .setName('leave')
         .setDescription('Leave a channel'),
     async execute(interaction) {
-        const { options, member, guild, channel, client } = interaction;
+        const { options, member, guild, channel, client, user } = interaction;
         const embed = new EmbedBuilder();
         const voiceChannel = member.voice.channel;
 
@@ -18,30 +18,30 @@ module.exports = {
             });
         }
 
-        if (!member.voice.channelId === guild.members.me.voice.channelId) {
+        if (client.authorQueue === user.id) {
+            try {
+                client.distube.voices.leave(voiceChannel);
+                return interaction.reply({
+                    content: `(～￣▽￣)～ | Bye bye!`,
+                });
+            } catch (e) {
+                console.log(e);
+                embed.setDescription(
+                    `${client.emotes.error} | Something went wrong`
+                );
+                await interaction.reply({
+                    embeds: [embed],
+                    ephemeral: true,
+                });
+            }
+        } else {
             embed
                 .setColor('Red')
                 .setDescription(
-                    `You can't use because I already active in <#${guild.members.me.voice.channelId}>`
+                    `${client.emotes.error} | You dont have permission to use this command | Author: <@${client.authorQueue}>`
                 );
             return interaction.reply({
                 embeds: [embed],
-            });
-        }
-
-        try {
-            client.distube.voices.leave(voiceChannel);
-            return interaction.reply({
-                content: `(～￣▽￣)～ | Bye bye!`,
-            });
-        } catch (e) {
-            console.log(e);
-            embed.setDescription(
-                `${client.emotes.error} | Something went wrong`
-            );
-            await interaction.reply({
-                embeds: [embed],
-                ephemeral: true,
             });
         }
     },

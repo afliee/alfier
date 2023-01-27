@@ -18,7 +18,7 @@ module.exports = {
             });
         }
 
-        if (!member.voice.channelId === guild.members.me.voice.channelId) {
+        if (!(member.voice.channelId === guild.members.me.voice.channelId)) {
             embed
                 .setColor('Red')
                 .setDescription(

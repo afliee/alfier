@@ -2,12 +2,20 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('stop')
-        .setDescription('Stop the connection'),
+        .setName('music_skipto')
+        .setDescription('Skip to song specified in queue')
+        .addIntegerOption((option) =>
+            option
+                .setName('position')
+                .setDescription('specify the position of the song')
+                .setMinValue(0)
+                .setRequired(true)
+        ),
     async execute(interaction) {
-        const { member, guild, client } = interaction;
-        const embed = new EmbedBuilder();
+        const { client, options, member, channel, guild } = interaction;
         const voiceChannel = member.voice.channel;
+        const position = options.getInteger('position');
+        const embed = new EmbedBuilder();
 
         if (!voiceChannel) {
             embed
@@ -42,20 +50,20 @@ module.exports = {
                     ephemeral: true,
                 });
             }
-
-            await queue.stop();
+            const song = await client.distube.jump(guild, position - 1);
             embed
                 .setColor('Green')
-                .setDescription('⏹️ | The song has been stopped');
+                .setDescription(
+                    `${client.emotes.success} | Skipped to ${song.name}`
+                );
             return interaction.reply({
                 embeds: [embed],
             });
         } catch (e) {
             console.log(e);
-            embed.setDescription(
-                `${client.emotes.error} | Something went wrong`
-            );
+            embed.setDescription(`${'⛔'} | Something went wrong`);
             await interaction.reply({
+                content: `Position out of range`,
                 embeds: [embed],
                 ephemeral: true,
             });

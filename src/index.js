@@ -1,16 +1,16 @@
 require('dotenv').config();
 
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config.json');
-
-const TOKEN = process.env.DJS_TOKEN;
 
 const { DisTube } = require('distube');
 const { SpotifyPlugin } = require('@distube/spotify');
 const { SoundCloudPlugin } = require('@distube/soundcloud');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+
+const TOKEN = process.env.DJS_TOKEN;
 
 const client = new Client({
     intents: [
@@ -26,15 +26,16 @@ const client = new Client({
 client.commands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
-client.commandArray = [];
 client.cooldown = new Collection();
+client.commandArray = [];
 client.emotes = config.emoji;
 
 client.distube = new DisTube(client, {
     searchSongs: 5,
     leaveOnEmpty: true,
+    leaveOnFinish: true,
+    leaveOnStop: false,
     emptyCooldown: 30,
-    leaveOnFinish: false,
     emitNewSongOnly: true,
     emitAddListWhenCreatingQueue: false,
     emitAddSongWhenCreatingQueue: false,
@@ -43,7 +44,9 @@ client.distube = new DisTube(client, {
             emitEventsAfterFetching: true,
         }),
         new SoundCloudPlugin(),
-        new YtDlpPlugin(),
+        new YtDlpPlugin({
+            update: true,
+        }),
     ],
 });
 
@@ -53,8 +56,10 @@ fs.readdirSync(functionPath).forEach((dir) => {
     const handlerFiles = fs
         .readdirSync(`${functionPath}/${dir}`)
         .filter((file) => file.endsWith('.js'));
+    // require handler files
     for (const file of handlerFiles) {
         require(`${functionPath}/${dir}/${file}`)(client);
     }
 });
+
 client.login(TOKEN);

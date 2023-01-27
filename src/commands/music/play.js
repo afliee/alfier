@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const yts = require('yt-search');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,7 +12,7 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
-        const { options, member, guild, channel, client } = interaction;
+        const { options, member, guild, channel, client, user } = interaction;
         const query = options.getString('query');
         const embed = new EmbedBuilder();
         const voiceChannel = member.voice.channel;
@@ -24,8 +25,43 @@ module.exports = {
                 embeds: [embed],
             });
         }
+        console.log(
+            member.voice.channelId,
+            guild.members.me.voice.channelId,
+            !(
+                member.voice.channelId ===
+                (guild.members.me.voice.channelId
+                    ? guild.members.me.voice.channelId
+                    : true)
+            )
+        );
+        const memberChannelId = member.voice.channelId;
+        const botChannelId = guild.members.me.voice.channelId;
 
-        if (!member.voice.channelId === guild.members.me.voice.channelId) {
+        if (!botChannelId) {
+            client.authorQueue = user.id;
+            console.log('Not in voice channel');
+            try {
+                client.distube.play(voiceChannel, query, {
+                    textChannel: channel,
+                    member: member,
+                });
+
+                return interaction.reply({
+                    content: '🎧| song received!!',
+                });
+            } catch (e) {
+                console.log(e);
+                embed.setDescription(
+                    `${client.emotes.error} | Something went wrong`
+                );
+                await interaction.reply({
+                    embeds: [embed],
+                    ephemeral: true,
+                });
+            }
+        } else if (memberChannelId !== botChannelId) {
+            console.log('Not in same voice channel');
             embed
                 .setColor('Red')
                 .setDescription(
@@ -34,26 +70,27 @@ module.exports = {
             return interaction.reply({
                 embeds: [embed],
             });
-        }
+        } else {
+            console.log('In same voice channel');
+            try {
+                client.distube.play(voiceChannel, query, {
+                    textChannel: channel,
+                    member: member,
+                });
 
-        try {
-            client.distube.play(voiceChannel, query, {
-                textChannel: channel,
-                member: member,
-            });
-
-            return interaction.reply({
-                content: '🎧| song received!!',
-            });
-        } catch (e) {
-            console.log(e);
-            embed.setDescription(
-                `${client.emotes.error} | Something went wrong`
-            );
-            await interaction.reply({
-                embeds: [embed],
-                ephemeral: true,
-            });
+                return interaction.reply({
+                    content: '🎧| song received!!',
+                });
+            } catch (e) {
+                console.log(e);
+                embed.setDescription(
+                    `${client.emotes.error} | Something went wrong`
+                );
+                await interaction.reply({
+                    embeds: [embed],
+                    ephemeral: true,
+                });
+            }
         }
     },
 };
