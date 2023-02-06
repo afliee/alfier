@@ -7,15 +7,11 @@ module.exports = {
     once: true,
     execute: async (client) => {
         console.log(`${client.user.username} Ready! on events 🎇✨🎉`);
+        const guilds = client.guilds.cache.map((guild) => guild.id);
         const slashCommands = client.commands.map((x) => {
-            // return {
-            //     name: x.data.name,
-            //     description: x.data.description,
-            //     options: x.data.options,
-            //     execute: x.execute,
-            // };
             return x.data.toJSON();
         });
+        guilds.forEach((guildId) => client.guildSettings.set(guildId, {}));
         // await client.guilds.cache.get(GUILD_ID).commands.set(slashCommands);
         await client.application.commands.set(slashCommands);
 

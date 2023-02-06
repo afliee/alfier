@@ -18,7 +18,6 @@ module.exports = async (client) => {
             if ('data' in command && 'execute' in command) {
                 table.addRow(command.data.name, '✅');
                 client.commands.set(command.data.name, command);
-                client.commandArray.push(command.data.toJSON());
             } else {
                 console.log(
                     `[WARNING] The command at ${file} is missing a required "data" or "execute" property.`
