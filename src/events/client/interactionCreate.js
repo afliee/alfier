@@ -27,7 +27,7 @@ module.exports = {
                     content: `⌚ | Please, wait ${time} for the cooldown!!`,
                     ephemeral: true,
                 });
-            }   
+            }
 
             interaction.setCooldown = (time) => {
                 interaction.client.cooldown.set(
@@ -45,6 +45,10 @@ module.exports = {
             } catch (error) {
                 console.error(`Error executing ${interaction.commandName}`);
                 console.error(error);
+                await interaction.reply({
+                    content: `Some Thing Went Wrong!`,
+                    ephemeral: true,
+                });
             }
         } else if (interaction.isButton()) {
             const button = interaction.client.buttons.get(interaction.customId);
@@ -55,6 +59,10 @@ module.exports = {
             } catch (error) {
                 console.error(`Error executing ${interaction.commandName}`);
                 console.error(error);
+                await interaction.reply({
+                    content: `Some Thing Went Wrong!`,
+                    ephemeral: true,
+                });
             }
         } else if (interaction.type === InteractionType.ModalSubmit) {
             const modal = interaction.client.modals.get(interaction.customId);

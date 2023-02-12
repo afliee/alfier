@@ -17,7 +17,8 @@ module.exports = {
         if (!oldChannelId && newChannelId) {
             console.log('user joined channel');
             if (newChannelId === idChanel) {
-                const channelName = user.user.username;
+                console.log(user);
+                const channelName = user.nickname || user.user.username;
                 const voiceChannel = await createVoiceChannel(
                     guild,
                     channelName,

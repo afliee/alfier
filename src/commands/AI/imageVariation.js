@@ -11,6 +11,10 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
+        await interaction.reply({
+            content: `This command is currently under development.`,
+            ephemeral: true,
+        });
         // create image variation with avatar url with createImageVariation of openai
     },
 };
