@@ -3,6 +3,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const config = require('../config.json');
+const keepAlive = require('./keep_alive.js');
 
 const { DisTube } = require('distube');
 const { SpotifyPlugin } = require('@distube/spotify');
@@ -72,4 +73,5 @@ fs.readdirSync(functionPath).forEach((dir) => {
     }
 });
 
+keepAlive();
 client.login(TOKEN);
