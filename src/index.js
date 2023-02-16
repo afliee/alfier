@@ -74,4 +74,15 @@ fs.readdirSync(functionPath).forEach((dir) => {
 });
 
 keepAlive();
-client.login(TOKEN);
+const promise = new Promise((resolve, reject) => {
+    resolve(client);
+});
+try {
+    client.login(TOKEN);
+} catch (e) {
+    promise
+        .then((client) => client.destroy())
+        .then(() => {
+            client.login(TOKEN);
+        });
+}
