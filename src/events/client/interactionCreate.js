@@ -5,7 +5,9 @@ module.exports = {
     name: Events.InteractionCreate,
     execute: async (interaction) => {
         if (interaction.isChatInputCommand()) {
-            console.log(`${interaction.commandName}`);
+            console.log(
+                `${interaction.commandName} was executed by ${interaction.user.tag} in ${interaction.guild.name} and ${interaction.channel.name} channel`
+            );
             const command = interaction.client.commands.get(
                 interaction.commandName
             );
