@@ -29,6 +29,7 @@ module.exports = {
     async execute(interaction) {
         const { client, options, member, guild, user } = interaction;
 
+        await interaction?.deferReply().catch(() => {});
         try {
             if (
                 user.id === UID ||
@@ -49,7 +50,10 @@ module.exports = {
                         `The auto create channel has been set to ${channel}.`
                     )
                     .setColor(0x00ff00);
-                interaction.reply({ embeds: [embed] });
+
+                await interaction.editReply({ embeds: [embed] }).catch(() => {
+                    console.log("Couldn't edit reply. in setAutoCreate");
+                });
             } else {
                 const embed = new EmbedBuilder()
                     .setTitle('Permission Denied')
@@ -57,11 +61,11 @@ module.exports = {
                         'You do not have permission to use this command.'
                     )
                     .setColor(0xff0000);
-                interaction.reply({ embeds: [embed] });
+                return await interaction.editReply({ embeds: [embed] });
             }
         } catch (e) {
             console.log(e);
-            await interaction.reply({
+            return await interaction.editReply({
                 content: `There was an error setting the auto create channel. Please try again later.`,
                 ephermeral: true,
             });

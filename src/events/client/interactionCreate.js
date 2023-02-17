@@ -47,10 +47,13 @@ module.exports = {
             } catch (error) {
                 console.error(`Error executing ${interaction.commandName}`);
                 console.error(error);
-                await interaction.reply({
-                    content: `Some Thing Went Wrong!`,
-                    ephemeral: true,
-                });
+                await interaction.deferReply().catch(() => null);
+                await interaction
+                    .editReply({
+                        content: `Some Thing Went Wrong!`,
+                        ephemeral: true,
+                    })
+                    .catch(() => null);
             }
         } else if (interaction.isButton()) {
             const button = interaction.client.buttons.get(interaction.customId);

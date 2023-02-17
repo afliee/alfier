@@ -14,54 +14,70 @@ module.exports = {
         const idChanel = guildSettings.autoCreateChannel;
         const categoryChannel = guildSettings.autoCreateCategory;
 
-        if (!oldChannelId && newChannelId) {
-            console.log('user joined channel');
-            if (newChannelId === idChanel) {
-                const channelName = user.nickname || user.user.username;
-                const voiceChannel = await createVoiceChannel(
-                    guild,
-                    channelName,
-                    categoryChannel
-                );
-                const textChannel = await createTextChannel(
-                    guild,
-                    channelName,
-                    categoryChannel
-                );
-                moveUserToChannel(user, voiceChannel);
-                console.log(user.id);
-                client.colChannels.set(voiceChannel.id, {
-                    voiceChannel,
-                    textChannel,
-                    userId: user.id,
-                });
-            }
-        } else if (oldChannelId && !newChannelId) {
-            console.log('user left channel');
-            if (client.colChannels.has(oldChannelId)) {
-                const { voiceChannel, textChannel } =
-                    client.colChannels.get(oldChannelId);
-                if (voiceChannel.members.size === 0) {
-                    await deleteChannel(voiceChannel, 1000);
-                    await deleteChannel(textChannel, 1000);
-                    client.colChannels.delete(oldChannelId);
+        try {
+            if (!oldChannelId && newChannelId) {
+                console.log('user joined channel');
+                if (newChannelId === idChanel) {
+                    const channelName = user.nickname || user.user.username;
+                    const voiceChannel = await createVoiceChannel(
+                        guild,
+                        channelName,
+                        categoryChannel
+                    );
+                    const textChannel = await createTextChannel(
+                        guild,
+                        channelName,
+                        categoryChannel
+                    );
+                    moveUserToChannel(user, voiceChannel);
+                    console.log(user.id);
+                    client.colChannels.set(voiceChannel.id, {
+                        voiceChannel,
+                        textChannel,
+                        userId: user.id,
+                    });
                 }
-            }
-        } else if (oldChannelId && newChannelId) {
-            console.log('user switched channels');
-            if (newChannelId === idChanel) {
-                moveUserToChannel(user, oldState.channel);
-            } else {
+            } else if (oldChannelId && !newChannelId) {
+                console.log('user left channel');
                 if (client.colChannels.has(oldChannelId)) {
                     const { voiceChannel, textChannel } =
                         client.colChannels.get(oldChannelId);
                     if (voiceChannel.members.size === 0) {
-                        await deleteChannel(voiceChannel, 1000);
-                        await deleteChannel(textChannel, 1000);
+                        try {
+                            await deleteChannel(voiceChannel, 1000).catch(
+                                () => {}
+                            );
+                            await deleteChannel(textChannel, 1000).catch(
+                                () => {}
+                            );
+                        } catch (e) {}
                         client.colChannels.delete(oldChannelId);
                     }
                 }
+            } else if (oldChannelId && newChannelId) {
+                console.log('user switched channels');
+                if (newChannelId === idChanel) {
+                    moveUserToChannel(user, oldState.channel);
+                } else {
+                    if (client.colChannels.has(oldChannelId)) {
+                        const { voiceChannel, textChannel } =
+                            client.colChannels.get(oldChannelId);
+                        if (voiceChannel.members.size === 0) {
+                            client.colChannels.delete(oldChannelId);
+                            try {
+                                await deleteChannel(voiceChannel, 1000).catch(
+                                    () => {}
+                                );
+                                await deleteChannel(textChannel, 1000).catch(
+                                    () => {}
+                                );
+                            } catch (error) {}
+                        }
+                    }
+                }
             }
+        } catch (e) {
+            console.log(e);
         }
     },
 };

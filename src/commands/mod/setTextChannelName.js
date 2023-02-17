@@ -14,29 +14,32 @@ module.exports = {
         const { user, member, client, guild, options } = interaction;
         const name = options.getString('name');
 
+        await interaction?.deferReply().catch(() => {});
+
         if (!client.colChannels.has(member.voice.channelId)) {
-            return interaction.reply({
+            await interaction.editReply({
                 content: 'You must be in a channel created by the bot',
                 ephemeral: true,
             });
         }
+
         const { voiceChannel, textChannel, userId } = client.colChannels.get(
             member.voice.channelId
         );
         if (userId !== user.id) {
-            return interaction.reply({
+            await interaction.editReply({
                 content: 'You must be the owner of the channel',
                 ephemeral: true,
             });
         }
         try {
             await textChannel.setName(name);
-            return interaction.reply({
+            await interaction.editReply({
                 content: `🐞 | The name of the channel has been changed to **${name}**`,
             });
         } catch (e) {
             console.log(e);
-            return interaction.reply({
+            await interaction.editReply({
                 content:
                     "🐞 | I don't have permission to change the name of the channel",
                 ephemeral: true,

@@ -1,74 +1,106 @@
 require('dotenv').config();
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
     ButtonBuilder,
-    ActionRow,
-    ButtonStyle,
+    StringSelectMenuBuilder,
+    ActionRowBuilder,
+    PermissionFlagsBits,
+    ChannelType,
 } = require('discord.js');
 
 const UID = process.env.UID;
 
+const getAllTextChannel = (client, guildId, channelId) => {
+    const { autoCreateCategory } = client.guildSettings.get(guildId);
+    const channels = client.channels.cache
+        .filter((channel) => {
+            return (
+                channel.type === ChannelType.GuildText &&
+                channel.parentId === autoCreateCategory.id &&
+                channel.id !== channelId
+            );
+        })
+        .map((channel) => {
+            return {
+                label: channel.name,
+                value: channel.id,
+            };
+        });
+    return channels;
+};
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('delete_text_channel')
-        .setDescription('Delete the text channel')
-        .addChannelOption((option) =>
-            option
-                .setName('channel')
-                .setDescription('The channel to delete')
-                .setRequired(true)
-        ),
+        .setDescription('Delete the text channel'),
     async execute(interaction) {
         const { member, guild, user, option, client } = interaction;
-        const button = new ButtonBuilder();
-        const row = new ActionRow();
-        const channel = option.getChannel('channel');
-        if (
-            user.id !== UID ||
-            !member.permissions.has(PermissionFlagsBits.ADMINISTRATOR)
-        ) {
-            return interaction.reply({
-                content: 'You do not have permission to use this command.',
+        const select = new StringSelectMenuBuilder();
+        const row = new ActionRowBuilder();
+        await interaction?.deferReply().catch(() => {});
+        try {
+            if (
+                user.id !== UID ||
+                !member.permissions.has(PermissionFlagsBits.ADMINISTRATOR)
+            ) {
+                await interaction.editReply({
+                    content: 'You do not have permission to use this command.',
+                    ephemeral: true,
+                });
+            }
+            const categoryId = client.guildSettings.get(
+                guild.id
+            )?.autoCreateCategory;
+            if (!categoryId) {
+                await interaction.editReply({
+                    content: 'You must be set auto create channel first.',
+                    ephemeral: true,
+                });
+            }
+
+            const channels = getAllTextChannel(
+                client,
+                guild.id,
+                interaction.channelId
+            );
+            console.log(channels);
+            if (channels.length === 0) {
+                await interaction.editReply({
+                    content: 'No text channel found.',
+                    ephemeral: true,
+                });
+            } else {
+                select
+                    .setCustomId('select_text_channel')
+                    .setPlaceholder('Select a text channel')
+                    .addOptions(...channels);
+                row.addComponents(select);
+            }
+            let message = await interaction.editReply({
+                content: `${interaction.user}, Are you sure you want to delete?\n**Note:** This action cannot be undone.`,
+                components: [row],
+            });
+            let collector = message.createMessageComponentCollector();
+            setTimeout(() => {
+                collector.stop();
+            }, 20 * 1000);
+            collector.on('collect', async (i) => {
+                if (i.customId === 'select_text_channel') {
+                    const channel = client.channels.cache.get(i.values[0]);
+
+                    await channel.delete();
+                    await i.update({
+                        content: `🦄 | Deleted ${channel}`,
+                    });
+                    message.delete();
+                }
+            });
+        } catch (e) {
+            console.log(e);
+            await interaction.editReply({
+                content: `🦄 | An error occurred`,
                 ephemeral: true,
             });
         }
-
-        button
-            .setLabel('Delete')
-            .setCustomId('btn_delete')
-            .setStyle(ButtonStyle.DANGER);
-        row.addComponent(button);
-        await interaction.deferReply().catch(() => null);
-        let message = await interaction.editReply({
-            content: `${interaction.user}, Are you sure you want to delete ${channel}?`,
-            components: [btn],
-        });
-        let collector = message.createMessageComponentCollector();
-        setTimeout(() => {
-            interaction.deleteReply().catch(() => null);
-            collector.stop();
-        }, 20 * 1000);
-
-        collector.on('collect', async (i) => {
-            if (interaction.user.id != i.user.id)
-                return i.deferUpdate().catch(() => null);
-
-            if (i.customId == 'btn_delete') {
-                try {
-                    await channel.delete();
-                    return i.update({
-                        content: `Deleted ${channel}`,
-                        components: [],
-                    });
-                } catch (e) {
-                    console.log(e);
-                    return i.update({
-                        content: `Failed to delete ${channel}`,
-                        components: [],
-                    });
-                }
-            }
-        });
     },
 };
