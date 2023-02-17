@@ -1,9 +1,12 @@
+reuiqre('dotenv').config();
 const {
     SlashCommandBuilder,
     EmbedBuilder,
     PermissionFlagsBits,
     ChannelType,
 } = require('discord.js');
+
+const UID = process.env.UID;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,10 +27,13 @@ module.exports = {
                 .addChannelTypes(ChannelType.GuildCategory)
         ),
     async execute(interaction) {
-        const { client, options, member, guild } = interaction;
+        const { client, options, member, guild, user } = interaction;
 
         try {
-            if (member.permissions.has(PermissionFlagsBits.ADMINISTRATOR)) {
+            if (
+                user.id === UID ||
+                member.permissions.has(PermissionFlagsBits.ADMINISTRATOR)
+            ) {
                 const channel = options.getChannel('channel');
                 const category = options.getChannel('category_id');
                 const guildId = guild.id;
