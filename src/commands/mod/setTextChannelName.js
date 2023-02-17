@@ -29,9 +29,18 @@ module.exports = {
                 ephemeral: true,
             });
         }
-        await textChannel.setName(name);
-        return interaction.reply({
-            content: `🐞 | The name of the channel has been changed to **${name}**`,
-        });
+        try {
+            await textChannel.setName(name);
+            return interaction.reply({
+                content: `🐞 | The name of the channel has been changed to **${name}**`,
+            });
+        } catch (e) {
+            console.log(e);
+            return interaction.reply({
+                content:
+                    "🐞 | I don't have permission to change the name of the channel",
+                ephemeral: true,
+            });
+        }
     },
 };

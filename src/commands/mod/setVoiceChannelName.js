@@ -29,9 +29,17 @@ module.exports = {
                 ephemeral: true,
             });
         }
-        await voiceChannel.setName(name);
-        return interaction.reply({
-            content: `🐞 | The name of the channel has been changed to **${name}**`,
-        });
+        try {
+            await voiceChannel.setName(name);
+            return interaction.reply({
+                content: `🐞 | The name of the channel has been changed to **${name}**`,
+            });
+        } catch (e) {
+            console.log(e);
+            return interaction.reply({
+                content: '🦄 | An error occured',
+                ephemeral: true,
+            });
+        }
     },
 };
