@@ -1,4 +1,4 @@
-reuiqre('dotenv').config();
+require('dotenv').config();
 const {
     SlashCommandBuilder,
     EmbedBuilder,
