@@ -41,7 +41,7 @@ module.exports = {
         try {
             if (
                 user.id !== UID ||
-                !member.permissions.has(PermissionFlagsBits.ADMINISTRATOR)
+                !member.permissions.has(PermissionFlagsBits.Administrator)
             ) {
                 await interaction.editReply({
                     content: 'You do not have permission to use this command.',
